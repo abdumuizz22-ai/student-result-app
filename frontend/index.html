@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduTrack — Student Result Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f4f1ec;
+      --surface: #ffffff;
+      --border: #e0dbd2;
+      --primary: #1a3a2a;
+      --primary-light: #2d5c42;
+      --accent: #c8a96e;
+      --accent-light: #f0e6d0;
+      --danger: #c0392b;
+      --danger-light: #fdf0ef;
+      --success: #27ae60;
+      --success-light: #eafaf1;
+      --text: #1a1a1a;
+      --text-muted: #7a7060;
+      --shadow: 0 2px 12px rgba(0,0,0,0.07);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+      --radius: 8px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 400;
+      min-height: 100vh;
+    }
+
+    /* ── Pages ── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Auth Layout ── */
+    .auth-wrapper {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .auth-left {
+      background: var(--primary);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-left::before {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: rgba(200,169,110,0.1);
+      top: -100px; right: -100px;
+    }
+    .auth-left::after {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: rgba(200,169,110,0.07);
+      bottom: -80px; left: -80px;
+    }
+    .auth-brand {
+      position: relative; z-index: 1;
+    }
+    .auth-brand .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.8rem;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .auth-brand .logo span { color: var(--accent); }
+    .auth-brand .tagline {
+      color: rgba(255,255,255,0.5);
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .auth-features {
+      margin-top: 60px;
+      position: relative; z-index: 1;
+    }
+    .auth-feature {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      color: rgba(255,255,255,0.7);
+      font-size: 14px;
+    }
+    .auth-feature .icon {
+      width: 36px; height: 36px;
+      background: rgba(200,169,110,0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .auth-right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      background: var(--bg);
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+    }
+    .auth-card h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+    .auth-card .subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    /* ── Forms ── */
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      padding: 11px 14px;
+      border-radius: var(--radius);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus { border-color: var(--primary); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px 22px;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      width: 100%;
+      justify-content: center;
+      font-size: 15px;
+      padding: 13px;
+    }
+    .btn-primary:hover { background: var(--primary-light); }
+    .btn-accent { background: var(--accent); color: var(--primary); }
+    .btn-accent:hover { background: #b8945a; }
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-danger { background: var(--danger-light); color: var(--danger); }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-success { background: var(--success-light); color: var(--success); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    .auth-switch {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .auth-switch a {
+      color: var(--primary);
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    /* ── App Layout ── */
+    .app-layout { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 240px;
+      background: var(--primary);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 10;
+    }
+    .sidebar-brand {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-brand .name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: #fff;
+    }
+    .sidebar-brand .name span { color: var(--accent); }
+    .sidebar-brand .role-badge {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: rgba(200,169,110,0.2);
+      color: var(--accent);
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .sidebar-nav { flex: 1; padding: 16px 12px; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: 6px;
+      color: rgba(255,255,255,0.6);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 2px;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .nav-item.active { background: rgba(200,169,110,0.2); color: var(--accent); }
+    .nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+    .sidebar-footer {
+      padding: 16px 12px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .user-info .info .uname { font-size: 13px; font-weight: 600; color: #fff; }
+    .user-info .info .uemail { font-size: 11px; color: rgba(255,255,255,0.4); }
+    .logout-btn {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: none;
+      color: rgba(255,255,255,0.6);
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      padding: 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+    /* ── Main Content ── */
+    .main-content {
+      margin-left: 240px;
+      flex: 1;
+      padding: 36px 40px;
+      min-height: 100vh;
+    }
+
+    .page-header {
+      margin-bottom: 28px;
+    }
+    .page-header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      color: var(--primary);
+    }
+    .page-header p { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+
+    /* ── Stats Cards ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    .stat-card .stat-icon {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    .stat-card .stat-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--primary);
+      line-height: 1;
+    }
+    .stat-card .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ── Tables ── */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .card-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-header h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    .card-body { padding: 22px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    td {
+      padding: 12px 14px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg); }
+
+    /* ── Grade badges ── */
+    .grade-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .grade-A\\+ { background: #d5f5e3; color: #1e8449; }
+    .grade-A  { background: #d5f5e3; color: #1e8449; }
+    .grade-B  { background: #d6eaf8; color: #1a5276; }
+    .grade-C  { background: #fef9e7; color: #9a7d0a; }
+    .grade-D  { background: #fdf2e9; color: #935116; }
+    .grade-F  { background: #fdedec; color: #c0392b; }
+
+    /* ── Role badges ── */
+    .role-badge-table {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .role-admin   { background: #f4ecfb; color: #6c3483; }
+    .role-teacher { background: #eaf4fd; color: #1a5276; }
+    .role-student { background: #e9f7ef; color: #1e8449; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: var(--shadow-lg);
+      animation: modalIn 0.25s ease;
+    }
+    .modal h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      color: var(--primary);
+      margin-bottom: 20px;
+    }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s;
+      z-index: 999;
+      max-width: 320px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+
+    /* ── Report Card ── */
+    .report-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      max-width: 680px;
+    }
+    .report-header {
+      text-align: center;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+    }
+    .report-header .school {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      color: var(--primary);
+    }
+    .report-header .subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+    .report-student-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding: 16px;
+      background: var(--bg);
+      border-radius: var(--radius);
+    }
+    .report-student-info .field label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+    .report-student-info .field p { font-weight: 600; font-size: 15px; margin-top: 2px; }
+    .report-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+      padding: 16px;
+      background: var(--accent-light);
+      border-radius: var(--radius);
+    }
+    .summary-item { text-align: center; }
+    .summary-item .val {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      color: var(--primary);
+    }
+    .summary-item .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted);
+    }
+    .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; }
+    .tab-btn {
+      padding: 8px 18px;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      border-radius: 6px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    @keyframes modalIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+
+    @media (max-width: 768px) {
+      .auth-wrapper { grid-template-columns: 1fr; }
+      .auth-left { display: none; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .sidebar { width: 200px; }
+      .main-content { margin-left: 200px; padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ LOGIN PAGE ══════════════════ -->
+<div id="page-login" class="page active">
+  <div class="auth-wrapper">
+    <div class="auth-left">
+      <div class="auth-brand">
+        <div class="logo">Edu<span>Track</span></div>
+        <div class="tagline">Student Result Management</div>
+      </div>
+      <div class="auth-features">
+        <div class="auth-feature"><div class="icon">🎓</div>Student result tracking</div>
+        <div class="auth-feature"><div class="icon">📊</div>Teacher grade management</div>
+        <div class="auth-feature"><div class="icon">🛡️</div>Admin control panel</div>
+        <div class="auth-feature"><div class="icon">📄</div>PDF report generation</div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-card">
+        <h2>Welcome back</h2>
+        <p class="subtitle">Sign in to your account to continue</p>
+        <div class="form-group">
+          <label>Email address</label>
+          <input type="email" id="login-email" placeholder="you@school.com"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="••••••••"/>
+        </div>
+        <button class="btn btn-primary" onclick="login()">Sign In</button>
+        <div class="auth-switch">
+          Don't have an account? <a onclick="showPage('page-register')">Register here</a>
+        </div>
+        <div style="margin-top:20px;padding:14px;background:var(--accent-light);border-radius:8px;font-size:12px;color:var(--text-muted)">
+          <strong>Default Admin:</strong> admin@school.com / admin123
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ REGISTER PAGE ══════════════════ -->
+<div id="page-register" class="page">
+  <div class="auth-wrapper">
+    <div class="auth-left">
+      <div class="auth-brand">
+        <div class="logo">Edu<span>Track</span></div>
+        <div class="tagline">Student Result Management</div>
+      </div>
+      <div class="auth-features">
+        <div class="auth-feature"><div class="icon">🎓</div>Track your academic progress</div>
+        <div class="auth-feature"><div class="icon">📝</div>View detailed grade reports</div>
+        <div class="auth-feature"><div class="icon">📄</div>Download PDF report cards</div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-card">
+        <h2>Create account</h2>
+        <p class="subtitle">Register as a student or teacher</p>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="reg-name" placeholder="John Smith"/>
+        </div>
+        <div class="form-group">
+          <label>Email address</label>
+          <input type="email" id="reg-email" placeholder="you@school.com"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="reg-password" placeholder="Min. 6 characters"/>
+        </div>
+        <div class="form-group">
+          <label>Register as</label>
+          <select id="reg-role">
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="register()">Create Account</button>
+        <div class="auth-switch">
+          Already have an account? <a onclick="showPage('page-login')">Sign in</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ APP (Dashboard) ══════════════════ -->
+<div id="page-app" class="page">
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="name">Edu<span>Track</span></div>
+        <div class="role-badge" id="sidebar-role">Student</div>
+      </div>
+      <nav class="sidebar-nav" id="sidebar-nav"></nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="avatar" id="sidebar-avatar">?</div>
+          <div class="info">
+            <div class="uname" id="sidebar-name">User</div>
+            <div class="uemail" id="sidebar-email">user@school.com</div>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="logout()">← Sign Out</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+
+      <!-- ── Student: My Results ── -->
+      <div id="section-my-results" class="app-section" style="display:none">
+        <div class="page-header">
+          <h1>My Results</h1>
+          <p>View your grades and academic performance</p>
+        </div>
+        <div class="stats-grid" id="student-stats-grid"></div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Grade Breakdown</h3>
+            <button class="btn btn-accent btn-sm" onclick="generatePDF()">📄 Download Report Card</button>
+          </div>
+          <div id="student-grades-table"></div>
+        </div>
+      </div>
+
+      <!-- ── Teacher: Enter Grades ── -->
+      <div id="section-enter-grades" class="app-section" style="display:none">
+        <div class="page-header">
+          <h1>Enter Grades</h1>
+          <p>Manage student grades and results</p>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('tab-grade-entry', this)">Enter Grade</button>
+          <button class="tab-btn" onclick="switchTab('tab-all-students', this)">All Students</button>
+          <button class="tab-btn" onclick="switchTab('tab-subjects', this)">Subjects</button>
+        </div>
+
+        <div id="tab-grade-entry" class="tab-content active">
+          <div class="card">
+            <div class="card-header"><h3>Add / Update Grade</h3></div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Student</label>
+                  <select id="grade-student-id"></select>
+                </div>
+                <div class="form-group">
+                  <label>Subject</label>
+                  <select id="grade-subject-id"></select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Marks Obtained</label>
+                  <input type="number" id="grade-marks" placeholder="e.g. 78" min="0" max="100"/>
+                </div>
+                <div class="form-group">
+                  <label>Total Marks</label>
+                  <input type="number" id="grade-total" placeholder="100" value="100" min="1"/>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Remarks (optional)</label>
+                <input type="text" id="grade-remarks" placeholder="e.g. Good performance"/>
+              </div>
+              <button class="btn btn-primary" style="width:auto" onclick="submitGrade()">Save Grade</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-all-students" class="tab-content">
+          <div class="card">
+            <div class="card-header"><h3>All Students</h3></div>
+            <div id="all-students-table"></div>
+          </div>
+        </div>
+
+        <div id="tab-subjects" class="tab-content">
+          <div class="card">
+            <div class="card-header">
+              <h3>Subjects</h3>
+              <button class="btn btn-accent btn-sm" onclick="openModal('modal-add-subject')">+ Add Subject</button>
+            </div>
+            <div id="subjects-table"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Admin: Manage Users ── -->
+      <div id="section-admin-users" class="app-section" style="display:none">
+        <div class="page-header">
+          <h1>Manage Users</h1>
+          <p>View and manage all registered users</p>
+        </div>
+        <div class="stats-grid" id="admin-stats-grid"></div>
+        <div class="card">
+          <div class="card-header"><h3>All Users</h3></div>
+          <div id="admin-users-table"></div>
+        </div>
+      </div>
+
+      <!-- ── Admin: All Results ── -->
+      <div id="section-admin-results" class="app-section" style="display:none">
+        <div class="page-header">
+          <h1>All Results</h1>
+          <p>Overview of all student grades</p>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Student Performance Overview</h3></div>
+          <div id="admin-results-table"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════════ MODALS ══════════════════ -->
+<div id="modal-add-subject" class="modal-overlay">
+  <div class="modal">
+    <h3>Add New Subject</h3>
+    <div class="form-group">
+      <label>Subject Name</label>
+      <input type="text" id="subject-name" placeholder="e.g. Mathematics"/>
+    </div>
+    <div class="form-group">
+      <label>Subject Code</label>
+      <input type="text" id="subject-code" placeholder="e.g. MTH101"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-subject')">Cancel</button>
+      <button class="btn btn-accent" onclick="addSubject()">Add Subject</button>
+    </div>
+  </div>
+</div>
+
+<!-- Report Card Modal -->
+<div id="modal-report" class="modal-overlay">
+  <div class="modal" style="max-width:700px">
+    <h3>Report Card</h3>
+    <div id="report-card-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-report')">Close</button>
+      <button class="btn btn-accent" onclick="downloadPDF()">⬇ Download PDF</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  CONFIG
+// ════════════════════════════════════════════════════════
+const API = 'http://student-result-app-env.eba-wtcxiamk.eu-north-1.elasticbeanstalk.com/api';
+let currentUser = null;
+let reportData  = null;
+
+// ════════════════════════════════════════════════════════
+//  API HELPER
+// ════════════════════════════════════════════════════════
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include'
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res  = await fetch(API + path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+// ════════════════════════════════════════════════════════
+//  PAGE ROUTING
+// ════════════════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showSection(id) {
+  document.querySelectorAll('.app-section').forEach(s => s.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const nav = document.querySelector(`[data-section="${id}"]`);
+  if (nav) nav.classList.add('active');
+  loadSection(id);
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'tab-all-students') loadAllStudents();
+  if (id === 'tab-subjects') loadSubjects();
+}
+
+// ════════════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════════════
+async function login() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) return toast('Please fill in all fields', 'error');
+  try {
+    const data = await api('POST', '/auth/login', { email, password });
+    currentUser = data.user;
+    initApp();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function register() {
+  const name     = document.getElementById('reg-name').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const role     = document.getElementById('reg-role').value;
+  if (!name || !email || !password) return toast('Please fill in all fields', 'error');
+  if (password.length < 6) return toast('Password must be at least 6 characters', 'error');
+  try {
+    await api('POST', '/auth/register', { name, email, password, role });
+    toast('Account created! Please sign in.', 'success');
+    showPage('page-login');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function logout() {
+  await api('POST', '/auth/logout');
+  currentUser = null;
+  showPage('page-login');
+}
+
+// ════════════════════════════════════════════════════════
+//  APP INIT
+// ════════════════════════════════════════════════════════
+function initApp() {
+  const u = currentUser;
+  document.getElementById('sidebar-name').textContent  = u.name;
+  document.getElementById('sidebar-email').textContent = u.email;
+  document.getElementById('sidebar-role').textContent  = u.role.charAt(0).toUpperCase() + u.role.slice(1);
+  document.getElementById('sidebar-avatar').textContent = u.name.charAt(0).toUpperCase();
+
+  const nav = document.getElementById('sidebar-nav');
+  nav.innerHTML = '';
+
+  const navItems = {
+    student: [
+      { label: 'My Results',   icon: '📊', section: 'section-my-results' },
+    ],
+    teacher: [
+      { label: 'Enter Grades', icon: '✏️', section: 'section-enter-grades' },
+    ],
+    admin: [
+      { label: 'Manage Users', icon: '👥', section: 'section-admin-users' },
+      { label: 'All Results',  icon: '📊', section: 'section-admin-results' },
+      { label: 'Enter Grades', icon: '✏️', section: 'section-enter-grades' },
+    ]
+  };
+
+  (navItems[u.role] || []).forEach((item, i) => {
+    const el = document.createElement('div');
+    el.className = 'nav-item' + (i === 0 ? ' active' : '');
+    el.setAttribute('data-section', item.section);
+    el.innerHTML = `<span class="nav-icon">${item.icon}</span>${item.label}`;
+    el.onclick = () => showSection(item.section);
+    nav.appendChild(el);
+  });
+
+  showPage('page-app');
+  // Show first section for role
+  const first = { student: 'section-my-results', teacher: 'section-enter-grades', admin: 'section-admin-users' };
+  showSection(first[u.role] || 'section-my-results');
+}
+
+// ════════════════════════════════════════════════════════
+//  SECTION LOADERS
+// ════════════════════════════════════════════════════════
+async function loadSection(id) {
+  if (id === 'section-my-results')    await loadMyResults();
+  if (id === 'section-enter-grades')  await loadGradeEntryDropdowns();
+  if (id === 'section-admin-users')   await loadAdminUsers();
+  if (id === 'section-admin-results') await loadAdminResults();
+}
+
+// ── Student Results ──────────────────────────────────
+async function loadMyResults() {
+  try {
+    const grades = await api('GET', `/grades/student/${currentUser.id}`);
+    const total  = grades.length;
+    const avg    = total ? (grades.reduce((a,g) => a + (g.marks/g.total*100), 0) / total).toFixed(1) : 0;
+    const passed = grades.filter(g => (g.marks/g.total*100) >= 50).length;
+
+    document.getElementById('student-stats-grid').innerHTML = `
+      <div class="stat-card"><div class="stat-icon">📚</div><div class="stat-value">${total}</div><div class="stat-label">Subjects</div></div>
+      <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-value">${avg}%</div><div class="stat-label">Average</div></div>
+      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value">${passed}</div><div class="stat-label">Passed</div></div>
+      <div class="stat-card"><div class="stat-icon">❌</div><div class="stat-value">${total - passed}</div><div class="stat-label">Failed</div></div>
+    `;
+
+    if (!grades.length) {
+      document.getElementById('student-grades-table').innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>No grades recorded yet.</p></div>`;
+      return;
+    }
+
+    document.getElementById('student-grades-table').innerHTML = `
+      <table>
+        <thead><tr><th>Subject</th><th>Code</th><th>Marks</th><th>Percentage</th><th>Grade</th><th>Remarks</th></tr></thead>
+        <tbody>${grades.map(g => `
+          <tr>
+            <td><strong>${esc(g.subject_name)}</strong></td>
+            <td>${esc(g.subject_code)}</td>
+            <td>${g.marks} / ${g.total}</td>
+            <td>${(g.marks/g.total*100).toFixed(1)}%</td>
+            <td><span class="grade-badge grade-${g.grade}">${g.grade}</span></td>
+            <td style="color:var(--text-muted)">${esc(g.remarks||'—')}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Grade Entry ──────────────────────────────────────
+async function loadGradeEntryDropdowns() {
+  try {
+    const [students, subjects] = await Promise.all([
+      api('GET', '/students'),
+      api('GET', '/subjects')
+    ]);
+    document.getElementById('grade-student-id').innerHTML =
+      students.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    document.getElementById('grade-subject-id').innerHTML =
+      subjects.map(s => `<option value="${s.id}">${esc(s.name)} (${esc(s.code)})</option>`).join('');
+  } catch(e) {}
+}
+
+async function submitGrade() {
+  const student_id = document.getElementById('grade-student-id').value;
+  const subject_id = document.getElementById('grade-subject-id').value;
+  const marks      = parseFloat(document.getElementById('grade-marks').value);
+  const total      = parseFloat(document.getElementById('grade-total').value) || 100;
+  const remarks    = document.getElementById('grade-remarks').value;
+  if (!marks && marks !== 0) return toast('Please enter marks', 'error');
+  try {
+    const res = await api('POST', '/grades', { student_id, subject_id, marks, total, remarks });
+    toast(`Grade saved — ${res.grade}`, 'success');
+    document.getElementById('grade-marks').value   = '';
+    document.getElementById('grade-remarks').value = '';
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function loadAllStudents() {
+  try {
+    const students = await api('GET', '/grades/all');
+    if (!students.length) {
+      document.getElementById('all-students-table').innerHTML = `<div class="empty-state"><div class="empty-icon">👤</div><p>No students registered yet.</p></div>`;
+      return;
+    }
+    document.getElementById('all-students-table').innerHTML = `
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Subjects Graded</th><th>Average %</th></tr></thead>
+        <tbody>${students.map(s => `
+          <tr>
+            <td><strong>${esc(s.name)}</strong></td>
+            <td style="color:var(--text-muted)">${esc(s.email)}</td>
+            <td>${s.subjects_graded}</td>
+            <td>${s.avg_percentage ? s.avg_percentage + '%' : '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function loadSubjects() {
+  try {
+    const subjects = await api('GET', '/subjects');
+    if (!subjects.length) {
+      document.getElementById('subjects-table').innerHTML = `<div class="empty-state"><div class="empty-icon">📚</div><p>No subjects added yet.</p></div>`;
+      return;
+    }
+    document.getElementById('subjects-table').innerHTML = `
+      <table>
+        <thead><tr><th>Subject</th><th>Code</th><th>Teacher</th><th>Action</th></tr></thead>
+        <tbody>${subjects.map(s => `
+          <tr>
+            <td><strong>${esc(s.name)}</strong></td>
+            <td>${esc(s.code)}</td>
+            <td style="color:var(--text-muted)">${esc(s.teacher_name||'—')}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteSubject(${s.id})">Delete</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  } catch(e) {}
+}
+
+async function addSubject() {
+  const name = document.getElementById('subject-name').value.trim();
+  const code = document.getElementById('subject-code').value.trim();
+  if (!name || !code) return toast('Please fill in all fields', 'error');
+  try {
+    await api('POST', '/subjects', { name, code });
+    toast('Subject added!', 'success');
+    closeModal('modal-add-subject');
+    document.getElementById('subject-name').value = '';
+    document.getElementById('subject-code').value = '';
+    loadSubjects();
+    loadGradeEntryDropdowns();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteSubject(id) {
+  if (!confirm('Delete this subject? All related grades will also be deleted.')) return;
+  try {
+    await api('DELETE', `/subjects/${id}`);
+    toast('Subject deleted', 'success');
+    loadSubjects();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Admin Users ──────────────────────────────────────
+async function loadAdminUsers() {
+  try {
+    const [users, stats] = await Promise.all([
+      api('GET', '/admin/users'),
+      api('GET', '/admin/stats')
+    ]);
+    document.getElementById('admin-stats-grid').innerHTML = `
+      <div class="stat-card"><div class="stat-icon">🎓</div><div class="stat-value">${stats.students}</div><div class="stat-label">Students</div></div>
+      <div class="stat-card"><div class="stat-icon">👨‍🏫</div><div class="stat-value">${stats.teachers}</div><div class="stat-label">Teachers</div></div>
+      <div class="stat-card"><div class="stat-icon">📚</div><div class="stat-value">${stats.subjects}</div><div class="stat-label">Subjects</div></div>
+      <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value">${stats.grades}</div><div class="stat-label">Grades Entered</div></div>
+    `;
+    document.getElementById('admin-users-table').innerHTML = `
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Action</th></tr></thead>
+        <tbody>${users.map(u => `
+          <tr>
+            <td><strong>${esc(u.name)}</strong></td>
+            <td style="color:var(--text-muted)">${esc(u.email)}</td>
+            <td><span class="role-badge-table role-${u.role}">${u.role}</span></td>
+            <td style="color:var(--text-muted)">${new Date(u.created_at).toLocaleDateString()}</td>
+            <td>${u.role !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})">Remove</button>` : '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function deleteUser(id) {
+  if (!confirm('Remove this user? This action cannot be undone.')) return;
+  try {
+    await api('DELETE', `/admin/users/${id}`);
+    toast('User removed', 'success');
+    loadAdminUsers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function loadAdminResults() {
+  try {
+    const students = await api('GET', '/grades/all');
+    if (!students.length) {
+      document.getElementById('admin-results-table').innerHTML = `<div class="empty-state"><div class="empty-icon">📊</div><p>No results available yet.</p></div>`;
+      return;
+    }
+    document.getElementById('admin-results-table').innerHTML = `
+      <table>
+        <thead><tr><th>Student</th><th>Email</th><th>Subjects Graded</th><th>Average %</th><th>Report</th></tr></thead>
+        <tbody>${students.map(s => `
+          <tr>
+            <td><strong>${esc(s.name)}</strong></td>
+            <td style="color:var(--text-muted)">${esc(s.email)}</td>
+            <td>${s.subjects_graded}</td>
+            <td>${s.avg_percentage ? s.avg_percentage + '%' : '—'}</td>
+            <td><button class="btn btn-success btn-sm" onclick="viewReport(${s.id})">📄 View</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ════════════════════════════════════════════════════════
+//  REPORT CARD
+// ════════════════════════════════════════════════════════
+async function generatePDF() {
+  await viewReport(currentUser.id);
+}
+
+async function viewReport(studentId) {
+  try {
+    reportData = await api('GET', `/grades/report/${studentId}`);
+    const { student, grades, percentage, overallGrade, totalMarks, totalPossible } = reportData;
+    document.getElementById('report-card-content').innerHTML = `
+      <div class="report-card" id="pdf-report">
+        <div class="report-header">
+          <div class="school">EduTrack School System</div>
+          <div class="subtitle">Official Academic Report Card</div>
+        </div>
+        <div class="report-student-info">
+          <div class="field"><label>Student Name</label><p>${esc(student.name)}</p></div>
+          <div class="field"><label>Email</label><p>${esc(student.email)}</p></div>
+          <div class="field"><label>Student ID</label><p>#${student.id}</p></div>
+          <div class="field"><label>Date Issued</label><p>${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</p></div>
+        </div>
+        ${grades.length ? `
+        <table>
+          <thead><tr><th>Subject</th><th>Code</th><th>Marks</th><th>Out Of</th><th>%</th><th>Grade</th></tr></thead>
+          <tbody>${grades.map(g => `
+            <tr>
+              <td>${esc(g.subject_name)}</td>
+              <td>${esc(g.subject_code)}</td>
+              <td>${g.marks}</td>
+              <td>${g.total}</td>
+              <td>${(g.marks/g.total*100).toFixed(1)}%</td>
+              <td><span class="grade-badge grade-${g.grade}">${g.grade}</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        <div class="report-summary">
+          <div class="summary-item"><div class="val">${totalMarks}/${totalPossible}</div><div class="lbl">Total Marks</div></div>
+          <div class="summary-item"><div class="val">${percentage}%</div><div class="lbl">Percentage</div></div>
+          <div class="summary-item"><div class="val">${overallGrade}</div><div class="lbl">Overall Grade</div></div>
+        </div>` : '<div class="empty-state"><p>No grades recorded for this student.</p></div>'}
+      </div>`;
+    openModal('modal-report');
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function downloadPDF() {
+  if (!reportData) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const { student, grades, percentage, overallGrade, totalMarks, totalPossible } = reportData;
+
+  // Header
+  doc.setFillColor(26, 58, 42);
+  doc.rect(0, 0, 210, 40, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(22);
+  doc.setFont('helvetica','bold');
+  doc.text('EduTrack School System', 105, 18, { align:'center' });
+  doc.setFontSize(11);
+  doc.setFont('helvetica','normal');
+  doc.text('Official Academic Report Card', 105, 28, { align:'center' });
+
+  // Student info
+  doc.setTextColor(0,0,0);
+  doc.setFontSize(12);
+  doc.setFont('helvetica','bold');
+  doc.text('Student Information', 14, 52);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(11);
+  doc.text(`Name: ${student.name}`, 14, 62);
+  doc.text(`Email: ${student.email}`, 14, 70);
+  doc.text(`Student ID: #${student.id}`, 120, 62);
+  doc.text(`Date: ${new Date().toLocaleDateString()}`, 120, 70);
+
+  // Grades table
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(12);
+  doc.text('Grade Details', 14, 85);
+
+  if (grades.length) {
+    doc.setFillColor(26, 58, 42);
+    doc.rect(14, 90, 182, 8, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(9);
+    doc.text('Subject', 16, 96);
+    doc.text('Code', 80, 96);
+    doc.text('Marks', 110, 96);
+    doc.text('Total', 135, 96);
+    doc.text('%', 158, 96);
+    doc.text('Grade', 175, 96);
+
+    let y = 105;
+    doc.setTextColor(0,0,0);
+    grades.forEach((g, i) => {
+      if (i % 2 === 0) { doc.setFillColor(244,241,236); doc.rect(14, y-5, 182, 8, 'F'); }
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(9);
+      doc.text(g.subject_name.substring(0,30), 16, y);
+      doc.text(g.subject_code, 80, y);
+      doc.text(String(g.marks), 110, y);
+      doc.text(String(g.total), 135, y);
+      doc.text((g.marks/g.total*100).toFixed(1)+'%', 158, y);
+      doc.setFont('helvetica','bold');
+      doc.text(g.grade, 175, y);
+      y += 9;
+    });
+
+    // Summary
+    y += 8;
+    doc.setFillColor(200, 169, 110);
+    doc.rect(14, y, 182, 24, 'F');
+    doc.setTextColor(26,58,42);
+    doc.setFontSize(12);
+    doc.setFont('helvetica','bold');
+    doc.text(`Total: ${totalMarks}/${totalPossible}`, 30, y+10);
+    doc.text(`Percentage: ${percentage}%`, 90, y+10);
+    doc.text(`Overall Grade: ${overallGrade}`, 148, y+10);
+  } else {
+    doc.setFontSize(11);
+    doc.text('No grades recorded.', 14, 100);
+  }
+
+  doc.save(`report_card_${student.name.replace(/\s+/g,'_')}.pdf`);
+  toast('PDF downloaded!', 'success');
+}
+
+// ════════════════════════════════════════════════════════
+//  UTILITIES
+// ════════════════════════════════════════════════════════
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 2800);
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+// Check session on load
+(async () => {
+  try {
+    currentUser = await api('GET', '/auth/me');
+    initApp();
+  } catch(e) { showPage('page-login'); }
+})();
+</script>
+</body>
+</html>
