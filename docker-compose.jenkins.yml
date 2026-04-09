@@ -1,0 +1,32 @@
+services:
+  app:
+    image: muizz103/student-result-app:latest
+    container_name: student-app-jenkins
+    ports:
+      - "3001:8080"
+    environment:
+      - PORT=8080
+      - DB_HOST=db-jenkins
+      - DB_USER=appuser
+      - DB_PASSWORD=muizz123
+      - DB_NAME=student_results
+      - DB_PORT=3306
+      - SESSION_SECRET=mysecretkey123
+    depends_on:
+      - db-jenkins
+    restart: always
+
+  db-jenkins:
+    image: mysql:8.0
+    container_name: student-db-jenkins
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpass123
+      - MYSQL_DATABASE=student_results
+      - MYSQL_USER=appuser
+      - MYSQL_PASSWORD=muizz123
+    volumes:
+      - db_jenkins_data:/var/lib/mysql
+    restart: always
+
+volumes:
+  db_jenkins_data:
