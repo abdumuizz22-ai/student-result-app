@@ -49,3 +49,4 @@ Open: **http://localhost:3000**
 ## AWS Deployment
 Follow the same steps as the Todo app deployment guide — EC2 for backend, RDS for MySQL.
 Just change `DB_NAME=student_results` in your `.env`.
+# trigger
