@@ -5,6 +5,7 @@ pipeline {
         DOCKER_HUB_USER = 'muizz103'
         IMAGE_NAME = 'student-result-app'
         TEST_REPO = 'https://github.com/abdumuizz22-ai/edutrack-tests.git'
+        TEST_IMAGE = 'muizz103/edutrack-tests:latest'
     }
 
     stages {
@@ -43,13 +44,15 @@ pipeline {
 
         stage('Run Selenium Tests') {
             steps {
-                echo 'Running Selenium tests...'
+                echo 'Running Selenium tests in Docker container...'
                 sh '''
                     rm -rf edutrack-tests
                     git clone ${TEST_REPO} edutrack-tests
                     cd edutrack-tests
-                    pip3 install selenium pytest --break-system-packages -q
-                    python3 -m pytest test_edutrack.py -v --tb=short
+                    docker build -t ${TEST_IMAGE} .
+                    docker run --rm \
+                        --network host \
+                        ${TEST_IMAGE}
                 '''
             }
         }
