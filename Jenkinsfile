@@ -48,19 +48,14 @@ pipeline {
                     rm -rf edutrack-tests
                     git clone ${TEST_REPO} edutrack-tests
                     cd edutrack-tests
-                    docker build -t edutrack-tests:latest .
-                    docker run --rm \
-                        --network host \
-                        edutrack-tests:latest
+                    pip3 install selenium pytest --break-system-packages -q
+                    python3 -m pytest test_edutrack.py -v --tb=short
                 '''
             }
         }
     }
 
     post {
-        always {
-            sh 'docker rmi edutrack-tests:latest || true'
-        }
         success {
             echo 'Pipeline completed successfully! All tests passed.'
         }
