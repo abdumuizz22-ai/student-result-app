@@ -4,12 +4,13 @@ pipeline {
     environment {
         DOCKER_HUB_USER = 'muizz103'
         IMAGE_NAME = 'student-result-app'
+        TEST_REPO = 'https://github.com/abdumuizz22-ai/edutrack-tests.git'
     }
 
     stages {
         stage('Clone Repository') {
             steps {
-                echo 'Cloning repository...'
+                echo 'Cloning application repository...'
                 checkout scm
             }
         }
@@ -36,16 +37,35 @@ pipeline {
                 echo 'Deploying application...'
                 sh 'docker-compose -f docker-compose.jenkins.yml down || true'
                 sh 'docker-compose -f docker-compose.jenkins.yml up -d'
+                sh 'sleep 30'
+            }
+        }
+
+        stage('Run Selenium Tests') {
+            steps {
+                echo 'Running Selenium tests...'
+                sh '''
+                    rm -rf edutrack-tests
+                    git clone ${TEST_REPO} edutrack-tests
+                    cd edutrack-tests
+                    docker build -t edutrack-tests:latest .
+                    docker run --rm \
+                        --network host \
+                        edutrack-tests:latest
+                '''
             }
         }
     }
 
     post {
+        always {
+            sh 'docker rmi edutrack-tests:latest || true'
+        }
         success {
-            echo 'Pipeline completed successfully!'
+            echo 'Pipeline completed successfully! All tests passed.'
         }
         failure {
-            echo 'Pipeline failed!'
+            echo 'Pipeline failed! Check the logs for details.'
         }
     }
 }
